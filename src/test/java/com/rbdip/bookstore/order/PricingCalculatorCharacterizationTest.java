@@ -32,6 +32,7 @@ class PricingCalculatorCharacterizationTest {
     @Test
     void doesNotReturnNegativeTotalAfterFixedCoupon() {
         assertThat(total("5.00", 1, "regular", "SAVE10")).isEqualByComparingTo("0.00");
+        assertThat(total("10.00", 1, "regular", "SAVE10")).isEqualByComparingTo("0.00");
     }
 
     @Test
