@@ -12,7 +12,11 @@ public class CustomerService {
     }
 
     public Customer findOrCreate(String fullName, String address, String phone) {
-        return customerRepository.findMatching(fullName, address, phone)
-                .orElseGet(() -> customerRepository.save(new Customer(fullName, address, phone)));
+        String normalizedName = fullName.trim();
+        int separator = normalizedName.indexOf(' ');
+        String firstName = separator < 0 ? normalizedName : normalizedName.substring(0, separator);
+        String lastName = separator < 0 ? "" : normalizedName.substring(separator + 1).trim();
+        return customerRepository.findMatching(firstName, lastName, address, phone)
+                .orElseGet(() -> customerRepository.save(new Customer(firstName, lastName, address, phone)));
     }
 }
