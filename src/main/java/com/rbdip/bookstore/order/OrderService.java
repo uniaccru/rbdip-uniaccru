@@ -1,5 +1,7 @@
 package com.rbdip.bookstore.order;
 
+import com.rbdip.bookstore.customer.Customer;
+import com.rbdip.bookstore.customer.CustomerService;
 import java.math.BigDecimal;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ public class OrderService {
     private final OrderItemRepository orderItemRepository;
     private final OrderRequestValidator requestValidator;
     private final OrderItemPreparationService itemPreparationService;
+    private final CustomerService customerService;
     private final PricingCalculator pricingCalculator;
     private final OrderNotificationService notificationService;
 
@@ -24,12 +27,14 @@ public class OrderService {
             OrderItemRepository orderItemRepository,
             OrderRequestValidator requestValidator,
             OrderItemPreparationService itemPreparationService,
+            CustomerService customerService,
             PricingCalculator pricingCalculator,
             OrderNotificationService notificationService) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.requestValidator = requestValidator;
         this.itemPreparationService = itemPreparationService;
+        this.customerService = customerService;
         this.pricingCalculator = pricingCalculator;
         this.notificationService = notificationService;
     }
@@ -45,13 +50,14 @@ public class OrderService {
                 request.customerType(),
                 request.couponCode());
 
-        Order order = new Order(
-                request.customerFullName(), request.customerAddress(), request.customerPhone(), "new");
+        Customer customer = customerService.findOrCreate(
+                request.customerFullName(), request.customerAddress(), request.customerPhone());
+        Order order = new Order(customer, "new");
         order = orderRepository.save(order);
 
         for (OrderItemPreparationService.PreparedItem item : items) {
             orderItemRepository.save(new OrderItem(
-                    order.getId(), item.product().getName(), item.product().getPrice(), item.quantity()));
+                    order.getId(), item.product(), item.quantity()));
         }
 
         notificationService.sendConfirmation(request.customerFullName(), order.getId(), total);
